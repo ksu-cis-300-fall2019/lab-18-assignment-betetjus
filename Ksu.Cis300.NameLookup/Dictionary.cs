@@ -138,5 +138,100 @@ namespace Ksu.Cis300.NameLookup
             CheckKey(k);
             _elements = Add(_elements, k, v);
         }
+
+        /// <summary>
+        /// Returns the result of removing the smallest key from the tree. Out parameter min is the removed value
+        /// </summary>
+        /// <param name="tree">The tree to remove the min from</param>
+        /// <param name="min">The removed minimum element</param>
+        /// <returns>The updated tree</returns>
+        private static BinaryTreeNode<KeyValuePair<TKey,TValue>> RemoveMinimumKey(BinaryTreeNode<KeyValuePair<TKey, TValue>> tree, out KeyValuePair<TKey,TValue> min)
+        {
+            if (tree.LeftChild == null)
+            {
+                min = tree.Data;
+                tree = tree.RightChild;
+                return tree;
+            }
+            else
+            {
+                BinaryTreeNode<KeyValuePair<TKey, TValue>> newLeft;
+                newLeft = RemoveMinimumKey(tree.LeftChild, out min);
+                return new BinaryTreeNode<KeyValuePair<TKey, TValue>>(tree.Data, newLeft, tree.RightChild);
+            }
+        }
+
+        /// <summary>
+        /// Removes the key from the tree if possible.
+        /// </summary>
+        /// <param name="key">the key to remove</param>
+        /// <param name="tree">the tree to remove from</param>
+        /// <param name="removed">a bool whether a key was removd or not</param>
+        /// <returns>the updated tree</returns>
+        private static BinaryTreeNode<KeyValuePair<TKey, TValue>> Remove(TKey key, BinaryTreeNode<KeyValuePair<TKey, TValue>> tree, out bool removed)
+        {
+            if (tree == null)
+            {
+                removed = false;
+                return null;
+            }
+            else
+            {
+                int comparison = tree.Data.Key.CompareTo(key);
+                if (comparison < 0)
+                {
+                    BinaryTreeNode<KeyValuePair<TKey, TValue>> rightUpdate = Remove(key, tree.RightChild, out removed);
+                    return new BinaryTreeNode<KeyValuePair<TKey, TValue>>(tree.Data, tree.LeftChild, rightUpdate);
+                }
+                else if (comparison > 0)
+                {
+                    BinaryTreeNode<KeyValuePair<TKey, TValue>> leftUpdate = Remove(key, tree.LeftChild, out removed);
+                    return new BinaryTreeNode<KeyValuePair<TKey, TValue>>(tree.Data, leftUpdate, tree.RightChild);
+                }
+                else
+                {
+                    removed = true;
+                    //no children
+                    if (tree.LeftChild == null & tree.RightChild == null)
+                        return null;
+                    //only left child
+                    else if (tree.LeftChild != null && tree.RightChild == null)
+                        return tree.LeftChild;
+                    //only right child
+                    else if (tree.RightChild != null && tree.LeftChild == null)
+                        return tree.RightChild;
+                    //both children
+                    else
+                    {
+                        KeyValuePair<TKey, TValue> min;
+                        BinaryTreeNode<KeyValuePair<TKey, TValue>> updatedRight = RemoveMinimumKey(tree.RightChild, out min);
+                        BinaryTreeNode<KeyValuePair<TKey, TValue>> newTree = new BinaryTreeNode<KeyValuePair<TKey, TValue>>(min, tree.LeftChild, updatedRight);
+                        return newTree;
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// removes the given key and its value form the dictionary
+        /// </summary>
+        /// <param name="k">The key to remove</param>
+        /// <returns>True if successful, false otherwise</returns>
+        public bool Remove(TKey k)
+        {
+            CheckKey(k);
+            bool removed;
+
+            BinaryTreeNode<KeyValuePair<TKey, TValue>> updatedTree = Remove(k, _elements, out removed);
+            if(removed)
+            {
+                _elements = updatedTree;
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
     }
 }
